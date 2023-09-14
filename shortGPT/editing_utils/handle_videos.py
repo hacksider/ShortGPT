@@ -46,10 +46,10 @@ def extract_random_clip_from_video(video_url, video_duration, clip_duration , ou
     """
     if not video_duration:
         raise Exception("Could not get video duration")
-    if not video_duration*0.7 > 120:
+    if not video_duration > 120 / 0.7:
         raise Exception("Video too short")
     start_time = video_duration*0.15 + random.random()* (0.7*video_duration-clip_duration)
-    
+
     (
         ffmpeg
         .input(video_url, ss=start_time, t=clip_duration)
@@ -62,7 +62,7 @@ def extract_random_clip_from_video(video_url, video_duration, clip_duration , ou
 
 
 def get_aspect_ratio(video_file):
-    cmd = 'ffprobe -i "{}" -v quiet -print_format json -show_format -show_streams'.format(video_file)
+    cmd = f'ffprobe -i "{video_file}" -v quiet -print_format json -show_format -show_streams'
 #     jsonstr = subprocess.getoutput(cmd)
     jsonstr = subprocess.check_output(cmd, shell=True, encoding='utf-8')
     r = json.loads(jsonstr)

@@ -9,12 +9,15 @@ def getImageUrlsTimed(imageTextPairs):
 
 
 def searchImageUrlsFromQuery(query, top=3, expected_dim=[720,720], retries=5):
-    images = getBingImages(query, retries=retries)
-    if(images):
-        distances = list(map(lambda x: math.dist([x['width'], x['height']], expected_dim), images[0:top]))
+    if images := getBingImages(query, retries=retries):
+        distances = list(
+            map(
+                lambda x: math.dist([x['width'], x['height']], expected_dim),
+                images[:top],
+            )
+        )
         shortest_ones = sorted(distances)
         random.shuffle(shortest_ones)
         for distance in shortest_ones:
-            image_url = images[distances.index(distance)]['url']
-            return image_url
+            return images[distances.index(distance)]['url']
     return None

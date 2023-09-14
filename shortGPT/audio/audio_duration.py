@@ -49,10 +49,7 @@ def get_duration_ffprobe(signed_url):
 
 def get_asset_duration(url, isVideo=True):
     if ("youtube.com" in url):
-        if not isVideo:
-            url, _ = getYoutubeAudioLink(url)
-        else:
-            url, _ = getYoutubeVideoLink(url)
+        url, _ = getYoutubeAudioLink(url) if not isVideo else getYoutubeVideoLink(url)
     # Trying two different method to get the duration of the video / audio
     duration, err_ffprobe = get_duration_ffprobe(url)
     if duration is not None:

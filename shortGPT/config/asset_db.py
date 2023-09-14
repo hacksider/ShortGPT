@@ -82,22 +82,29 @@ class AssetDatabase:
     def get_df(cls, source=None) -> pd.DataFrame:
         data = []
         if source is None or source == 'local':
-            for key, asset in cls.local_assets._get().items():
-                data.append({'name': key,
-                             'type': asset['type'],
-                             'link': asset['path'],
-                             'source': 'local',
-                             'ts': asset.get('ts')
-                             })
+            data.extend(
+                {
+                    'name': key,
+                    'type': asset['type'],
+                    'link': asset['path'],
+                    'source': 'local',
+                    'ts': asset.get('ts'),
+                }
+                for key, asset in cls.local_assets._get().items()
+            )
         if source is None or source == 'youtube':
-            for key, asset in cls.remote_assets._get().items():
-                data.append({'name': key,
-                            'type': asset['type'],
-                             'link': asset['url'],
-                             'source': 'youtube' if 'youtube' in asset['url'] else 'internet',
-                             'ts': asset.get('ts')
-                             })
-
+            data.extend(
+                {
+                    'name': key,
+                    'type': asset['type'],
+                    'link': asset['url'],
+                    'source': 'youtube'
+                    if 'youtube' in asset['url']
+                    else 'internet',
+                    'ts': asset.get('ts'),
+                }
+                for key, asset in cls.remote_assets._get().items()
+            )
         df = pd.DataFrame(data)
         if (not df.empty):
             df.sort_values(by='ts', ascending=False, inplace=True)

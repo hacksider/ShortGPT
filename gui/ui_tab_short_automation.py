@@ -98,6 +98,7 @@ class ShortAutomationUI(AbstractComponentUI):
 
                 def logger(prog_str):
                     progress(self.progress_counter / (num_steps * numShorts), f"Making short {i+1}/{numShorts} - {prog_str}")
+
                 shortEngine.set_logger(logger)
 
                 for step_num, step_info in shortEngine.makeContent():
@@ -105,12 +106,16 @@ class ShortAutomationUI(AbstractComponentUI):
                     self.progress_counter += 1
 
                 video_path = shortEngine.get_video_output_path()
-                current_url = self.shortGptUI.share_url+"/" if self.shortGptUI.share else self.shortGptUI.local_url
+                current_url = (
+                    f"{self.shortGptUI.share_url}/"
+                    if self.shortGptUI.share
+                    else self.shortGptUI.local_url
+                )
                 file_url_path = f"{current_url}file={video_path}"
                 file_name = video_path.split("/")[-1].split("\\")[-1]
                 self.embedHTML += f'''
                 <div style="display: flex; flex-direction: column; align-items: center;">
-                    <video width="{250}" height="{500}" style="max-height: 100%;" controls>
+                    <video width="250" height="500" style="max-height: 100%;" controls>
                         <source src="{file_url_path}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
@@ -118,13 +123,21 @@ class ShortAutomationUI(AbstractComponentUI):
                         <button style="font-size: 1em; padding: 10px; border: none; cursor: pointer; color: white; background: #007bff;">Download Video</button>
                     </a>
                 </div>'''
-                yield self.embedHTML + '</div>', gr.Button.update(visible=True), gr.update(visible=False)
+                yield (
+                    f'{self.embedHTML}</div>',
+                    gr.Button.update(visible=True),
+                    gr.update(visible=False),
+                )
         except Exception as e:
             traceback_str = ''.join(traceback.format_tb(e.__traceback__))
-            error_name = type(e).__name__.capitalize() + " : " + f"{e.args[0]}"
+            error_name = f"{type(e).__name__.capitalize()} : " + f"{e.args[0]}"
             print("Error", traceback_str)
             error_html = GradioComponentsHTML.get_html_error_template().format(error_message=error_name, stack_trace=traceback_str)
-            yield self.embedHTML + '</div>', gr.Button.update(visible=True), gr.HTML.update(value=error_html, visible=True)
+            yield (
+                f'{self.embedHTML}</div>',
+                gr.Button.update(visible=True),
+                gr.HTML.update(value=error_html, visible=True),
+            )
 
     def inspect_create_inputs(self, background_video_list, background_music_list, watermark, short_type, facts_subject):
         if short_type == "Custom Facts shorts":
@@ -156,9 +169,6 @@ class ShortAutomationUI(AbstractComponentUI):
         if short_type == "Reddit Story shorts":
             return RedditShortEngine(voice_module, background_video_name=background_video, background_music_name=background_music, num_images=numImages, watermark=watermark, language=language)
         if "fact" in short_type.lower():
-            if "custom" in short_type.lower():
-                facts_subject = facts_subject
-            else:
-                facts_subject = short_type
+            facts_subject = facts_subject if "custom" in short_type.lower() else short_type
             return FactsShortEngine(voice_module, facts_type=facts_subject, background_video_name=background_video, background_music_name=background_music, num_images=50, watermark=watermark, language=language)
         raise gr.Error(f"Short type does not have a valid short engine: {short_type}")

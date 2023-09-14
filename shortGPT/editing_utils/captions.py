@@ -2,7 +2,7 @@ import re
 
 def getSpeechBlocks(whispered, silence_time=2):
     text_blocks, (st, et, txt) = [], (0,0,"")
-    for i, seg in enumerate(whispered['segments']):
+    for seg in whispered['segments']:
         if seg['start'] - et > silence_time:
             if txt: text_blocks.append([[st, et], txt])
             (st, et, txt) = (seg['start'], seg['end'], seg['text'])
@@ -17,10 +17,14 @@ def cleanWord(word):
     return re.sub(r'[^\w\s\-_"\'\']', '', word)
 
 def interpolateTimeFromDict(word_position, d):
-    for key, value in d.items():
-        if key[0] <= word_position <= key[1]:
-            return value
-    return None
+    return next(
+        (
+            value
+            for key, value in d.items()
+            if key[0] <= word_position <= key[1]
+        ),
+        None,
+    )
 
 def getTimestampMapping(whisper_analysis):
     index = 0
@@ -39,8 +43,8 @@ def splitWordsBySize(words, maxCaptionSize):
     while words:
         caption = words[0]
         words = words[1:]
-        while words and len(caption + ' ' + words[0]) <= maxCaptionSize:
-            caption += ' ' + words[0]
+        while words and len(f'{caption} {words[0]}') <= maxCaptionSize:
+            caption += f' {words[0]}'
             words = words[1:]
             if len(caption) >= halfCaptionSize and words:
                 break

@@ -17,25 +17,24 @@ def _extractBingImages(html):
 
 
 def _extractGoogleImages(html):
-  images = []
-  regex = re.compile(r"AF_initDataCallback\({key: 'ds:1', hash: '2', data:(.*?), sideChannel: {}}\);")
-  match = regex.search(html)
-  if match:
-      dz = json.loads(match.group(1))         
-      for c in dz[56][1][0][0][1][0]:
-          try:
-              thing = list(c[0][0].values())[0]
-              images.append(thing[1][3])
-          except:
-              pass
-  return images
+    images = []
+    regex = re.compile(r"AF_initDataCallback\({key: 'ds:1', hash: '2', data:(.*?), sideChannel: {}}\);")
+    if match := regex.search(html):
+        dz = json.loads(match.group(1))
+        for c in dz[56][1][0][0][1][0]:
+            try:
+                thing = list(c[0][0].values())[0]
+                images.append(thing[1][3])
+            except:
+                pass
+    return images
 
 
 def getBingImages(query, retries=5):
     query = query.replace(" ", "+")
     images = []
     tries = 0
-    while(len(images) == 0 and tries < retries):
+    while not images and tries < retries:
         response = requests.get(f"https://www.bing.com/images/search?q={query}&first=1")
         if(response.status_code == 200):
             images = _extractBingImages(response.text)

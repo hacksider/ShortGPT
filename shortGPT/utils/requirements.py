@@ -45,10 +45,10 @@ class Requirements:
     def is_all_requirements_installed(self):
         '''Check if all requirements are installed'''
         requirements = self.get_list_requirements()
-        for requirement in requirements:
-            if not self.is_requirement_installed(requirement):
-                return False
-        return True
+        return all(
+            self.is_requirement_installed(requirement)
+            for requirement in requirements
+        )
 
     def is_requirement_installed(self, package_name):
         '''Check if a package is installed'''
@@ -70,20 +70,19 @@ class Requirements:
     def get_all_requirements_versions(self):
         '''Get the versions of all requirements'''
         requirements = self.get_list_requirements()
-        versions = {}
-        for requirement in requirements:
-            versions[requirement] = self.get_version(requirement)
-        return versions
+        return {
+            requirement: self.get_version(requirement)
+            for requirement in requirements
+        }
 
     def get_all_requirements_not_installed(self):
         '''Get the list of all requirements not installed'''
         requirements = self.get_list_requirements()
-        not_installed = {}
-        for requirement in requirements:
-            # if version is None then the package is not installed
-            if self.get_version(requirement) is None:
-                not_installed[requirement] = self.get_version(requirement)
-        return not_installed
+        return {
+            requirement: self.get_version(requirement)
+            for requirement in requirements
+            if self.get_version(requirement) is None
+        }
 
 
 if __name__ == '__main__':
@@ -96,7 +95,7 @@ if __name__ == '__main__':
     #     print("You can install them by running the following command:")
     #     print("pip install -r requirements.txt")
 
-    print(f"System information:")
+    print("System information:")
     print(f"OS name : {requirements_manager.get_os_name()}")
     print(f"OS version : {requirements_manager.get_os_version()}")
     print(f"Python version : {requirements_manager.get_python_version()}")

@@ -27,19 +27,18 @@ class AbstractContentEngine(ABC):
         self.logger = self.default_logger
 
     def __getattr__(self, name):
-        if name.startswith('_db_'):
-            db_path = name[4:]  # remove '_db_' prefix
-            cache_attr = '_' + name
-            if not hasattr(self, cache_attr):
-                setattr(self, cache_attr, self.dataManager.get(db_path))
-            return getattr(self, cache_attr)
-        else:
+        if not name.startswith('_db_'):
             return super().__getattr__(name)
+        db_path = name[4:]  # remove '_db_' prefix
+        cache_attr = f'_{name}'
+        if not hasattr(self, cache_attr):
+            setattr(self, cache_attr, self.dataManager.get(db_path))
+        return getattr(self, cache_attr)
 
     def __setattr__(self, name, value):
         if name.startswith('_db_'):
             db_path = name[4:]  # remove '_db_' prefix
-            cache_attr = '_' + name
+            cache_attr = f'_{name}'
             setattr(self, cache_attr, value)
             self.dataManager.save(db_path, value)
         else:
@@ -50,7 +49,7 @@ class AbstractContentEngine(ABC):
         if not os.path.exists(self.dynamicAssetDir):
             os.makedirs(self.dynamicAssetDir)
 
-    def verifyParameters(*args, **kargs):
+    def verifyParameters(self, **kargs):
         keys = list(kargs.keys())
         for key in keys:
             if not kargs[key]:
@@ -66,9 +65,15 @@ class AbstractContentEngine(ABC):
             if currentStep not in self.stepDict:
                 raise Exception(f'Incorrect step {currentStep}')
             if self.stepDict[currentStep].__name__ == "_editAndRenderShort":
-                yield currentStep, f'Current step ({currentStep} / {self.get_total_steps()}) : ' + "Preparing rendering assets..."
+                yield (
+                    currentStep,
+                    f'Current step ({currentStep} / {self.get_total_steps()}) : Preparing rendering assets...',
+                )
             else:
-                yield currentStep, f'Current step ({currentStep} / {self.get_total_steps()}) : ' + self.stepDict[currentStep].__name__
+                yield (
+                    currentStep,
+                    f'Current step ({currentStep} / {self.get_total_steps()}) : {self.stepDict[currentStep].__name__}',
+                )
             if self.logger is not self.default_logger:
                 print(f'Step {currentStep} {self.stepDict[currentStep].__name__}')
             self.stepDict[currentStep]()

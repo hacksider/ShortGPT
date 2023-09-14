@@ -35,13 +35,12 @@ def downloadYoutubeAudio(url, outputFile):
 
 def speedUpAudio(tempAudioPath, outputFile, expected_duration=None):  # Speeding up the audio to make it under 60secs, otherwise the output video is not considered as a short.
     tempAudioPath, duration = get_asset_duration(tempAudioPath, False)
-    if not expected_duration:
-        if (duration > 57):
-            subprocess.run(['ffmpeg', '-i', tempAudioPath, '-af', f'atempo={(duration/57):.5f}', outputFile])
-        else:
-            subprocess.run(['ffmpeg', '-i', tempAudioPath, outputFile])
-    else:
+    if expected_duration:
         subprocess.run(['ffmpeg', '-i', tempAudioPath, '-af', f'atempo={(duration/expected_duration):.5f}', outputFile])
+    elif (duration > 57):
+        subprocess.run(['ffmpeg', '-i', tempAudioPath, '-af', f'atempo={(duration/57):.5f}', outputFile])
+    else:
+        subprocess.run(['ffmpeg', '-i', tempAudioPath, outputFile])
     if (os.path.exists(outputFile)):
         return outputFile
 
@@ -52,10 +51,10 @@ def ChunkForAudio(alltext, chunk_size=2500):
     curr_chunk = ''
     for text in alltext_list:
         if len(curr_chunk) + len(text) <= chunk_size:
-            curr_chunk += text + '.'
+            curr_chunk += f'{text}.'
         else:
             chunks.append(curr_chunk)
-            curr_chunk = text + '.'
+            curr_chunk = f'{text}.'
     if curr_chunk:
         chunks.append(curr_chunk)
     return chunks
@@ -64,10 +63,11 @@ def ChunkForAudio(alltext, chunk_size=2500):
 def audioToText(filename, model_size="base"):
     from whisper_timestamped import load_model, transcribe_timestamped
     global WHISPER_MODEL
-    if (WHISPER_MODEL == None):
+    if WHISPER_MODEL is None:
         WHISPER_MODEL = load_model(model_size)
-    gen = transcribe_timestamped(WHISPER_MODEL, filename, verbose=False, fp16=False)
-    return gen
+    return transcribe_timestamped(
+        WHISPER_MODEL, filename, verbose=False, fp16=False
+    )
 
 
 def getWordsPerSec(filename):

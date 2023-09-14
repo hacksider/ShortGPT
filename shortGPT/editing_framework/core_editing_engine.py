@@ -1,7 +1,6 @@
 from shortGPT.config.path_utils import get_program_path
 import os
-magick_path = get_program_path("magick")
-if magick_path:
+if magick_path := get_program_path("magick"):
     os.environ['IMAGEMAGICK_BINARY'] = magick_path
 from shortGPT.config.path_utils import handle_path
 import numpy as np
@@ -22,8 +21,7 @@ class CoreEditingEngine:
         assets = dict(sorted(schema['visual_assets'].items(), key=lambda item: item[1]['z']))
         clips = []
 
-        for asset_key in assets:
-            asset = assets[asset_key]
+        for asset_key, asset in assets.items():
             asset_type = asset['type']
             if asset_type == 'image':
                 try:
@@ -44,10 +42,9 @@ class CoreEditingEngine:
     def generate_video(self, schema:Dict[str, Any], output_file, logger=None) -> None:
         visual_assets = dict(sorted(schema['visual_assets'].items(), key=lambda item: item[1]['z']))
         audio_assets = dict(sorted(schema['audio_assets'].items(), key=lambda item: item[1]['z']))
-        
+
         visual_clips = []
-        for asset_key in visual_assets:
-            asset = visual_assets[asset_key]
+        for asset_key, asset in visual_assets.items():
             asset_type = asset['type']
             if asset_type == 'video':
                 clip = self.process_video_asset(asset)
@@ -62,7 +59,7 @@ class CoreEditingEngine:
                 raise ValueError(f'Invalid asset type: {asset_type}')
 
             visual_clips.append(clip)
-        
+
         audio_clips = []
 
         for asset_key in audio_assets:
@@ -90,8 +87,7 @@ class CoreEditingEngine:
         audio_assets = dict(sorted(schema['audio_assets'].items(), key=lambda item: item[1]['z']))
         audio_clips = []
 
-        for asset_key in audio_assets:
-            asset = audio_assets[asset_key]
+        for asset_key, asset in audio_assets.items():
             asset_type = asset['type']
             if asset_type == "audio":
                 audio_clip = self.process_audio_asset(asset)
@@ -132,7 +128,7 @@ class CoreEditingEngine:
                                    actions: List[Dict[str, Any]]) -> Union[VideoFileClip, ImageClip, TextClip]:
         clip = self.process_common_actions(clip, actions)
         for action in actions:
- 
+         
             if action['type'] == 'resize':
                 clip = clip.resize(**action['param'])
                 continue
@@ -159,11 +155,11 @@ class CoreEditingEngine:
 
             if action['type'] == 'auto_resize_image':
                 ar = clip.aspect_ratio
-                height = action['param']['maxHeight']
-                width = action['param']['maxWidth']
                 if ar <1:
+                    height = action['param']['maxHeight']
                     clip = clip.resize((height*ar, height))
                 else:
+                    width = action['param']['maxWidth']
                     clip = clip.resize((width, width/ar))
                 continue
 
@@ -176,18 +172,13 @@ class CoreEditingEngine:
         for action in actions:
             if action['type'] == 'normalize_music':
                 clip = clip.fx(audio_normalize)
-                pass
             if action['type'] == 'loop_background_music':
                 target_duration = action['param']
                 start = clip.duration * 0.15
                 clip = clip.subclip(start)
                 clip = clip.fx(audio_loop, duration=target_duration)
-                pass
-
             if action['type'] == 'volume_percentage':
                 clip = clip.volumex(action['param'])
-                pass
-
         return clip
 
     # Process individual asset types
@@ -206,8 +197,10 @@ class CoreEditingEngine:
 
     def process_text_asset(self, asset: Dict[str, Any]) -> TextClip:
         text_clip_params = asset['parameters']
-        
-        if not (any(key in text_clip_params for key in ['text','fontsize', 'size'])):
+
+        if all(
+            key not in text_clip_params for key in ['text', 'fontsize', 'size']
+        ):
             raise Exception('You must include at least a size or a fontsize to determine the size of your text')
         text_clip_params['txt'] = text_clip_params['text']
         clip_info = {k: text_clip_params[k] for k in ('txt', 'fontsize', 'font', 'color', 'stroke_width', 'stroke_color', 'size', 'kerning', 'method', 'align') if k in text_clip_params}
@@ -223,10 +216,9 @@ class CoreEditingEngine:
         def f(get_frame, t):
             if f.normalized_frame is not None:
                 return f.normalized_frame
-            else:
-                frame = get_frame(t)
-                f.normalized_frame = self.__normalize_frame(frame)
-                return f.normalized_frame
+            frame = get_frame(t)
+            f.normalized_frame = self.__normalize_frame(frame)
+            return f.normalized_frame
 
         f.normalized_frame = None
 
@@ -237,15 +229,14 @@ class CoreEditingEngine:
         shape = np.shape(frame)
         [dimensions, ] = np.shape(shape)
 
-        if dimensions == 2:
-            (height, width) = shape
-            normalized_frame = np.zeros((height, width, 3))
-            for y in range(height):
-                for x in range(width):
-                    grey_value = frame[y][x]
-                    normalized_frame[y][x] = (grey_value, grey_value, grey_value)
-            return normalized_frame
-        else:
+        if dimensions != 2:
             return frame
+        (height, width) = shape
+        normalized_frame = np.zeros((height, width, 3))
+        for y in range(height):
+            for x in range(width):
+                grey_value = frame[y][x]
+                normalized_frame[y][x] = (grey_value, grey_value, grey_value)
+        return normalized_frame
         
 
