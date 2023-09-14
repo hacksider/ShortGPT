@@ -16,8 +16,7 @@ class RedditShortEngine(ContentShortEngine):
     
     def __generateRandomStory(self):
         question = reddit_gpt.getInterestingRedditQuestion()
-        script = reddit_gpt.createRedditScript(question)
-        return script
+        return reddit_gpt.createRedditScript(question)
 
     def __getRealisticStory(self, max_tries=3):
         current_realistic_score = 0
@@ -56,9 +55,8 @@ class RedditShortEngine(ContentShortEngine):
             "nupvote_text": n_upvotes,
             "question_text": title
         })
-        imageEditingEngine.renderImage(
-            self.dynamicAssetDir+"redditThreadImage.png")
-        self._db_reddit_thread_image = self.dynamicAssetDir+"redditThreadImage.png"
+        imageEditingEngine.renderImage(f"{self.dynamicAssetDir}redditThreadImage.png")
+        self._db_reddit_thread_image = f"{self.dynamicAssetDir}redditThreadImage.png"
     
     def _editAndRenderShort(self):
         """
@@ -68,8 +66,8 @@ class RedditShortEngine(ContentShortEngine):
                               voiceover_audio_url=self._db_audio_path,
                               video_duration=self._db_background_video_duration, 
                               music_url=self._db_background_music_url)
-        
-        outputPath = self.dynamicAssetDir+"rendered_video.mp4"
+
+        outputPath = f"{self.dynamicAssetDir}rendered_video.mp4"
         if not (os.path.exists(outputPath)):
             self.logger("Rendering short: Starting automated editing...")
             videoEditor = EditingEngine()
@@ -87,7 +85,7 @@ class RedditShortEngine(ContentShortEngine):
                                            'text': self._db_watermark})
             videoEditor.addEditingStep(EditingStep.ADD_REDDIT_IMAGE, {
                                        'url': self._db_reddit_thread_image})
-            
+
             caption_type = EditingStep.ADD_CAPTION_SHORT_ARABIC if self._db_language == Language.ARABIC.value else EditingStep.ADD_CAPTION_SHORT 
             for timing, text in self._db_timed_captions:
                 videoEditor.addEditingStep(caption_type, {'text': text.upper(),

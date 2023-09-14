@@ -53,7 +53,8 @@ class ContentVideoEngine(AbstractContentEngine):
             self._db_translated_script = gpt_translate.translateContent(script, self._db_language)
             script = self._db_translated_script
         self._db_temp_audio_path = self.voiceModule.generate_voice(
-            script, self.dynamicAssetDir + "temp_audio_path.wav")
+            script, f"{self.dynamicAssetDir}temp_audio_path.wav"
+        )
 
     def _speedUpAudio(self):
         if (self._db_audio_path):
@@ -62,15 +63,11 @@ class ContentVideoEngine(AbstractContentEngine):
         # Since the video is not supposed to be a short( less than 60sec), there is no reason to speed it up
         self._db_audio_path = self._db_temp_audio_path
         return
-        self._db_audio_path = audio_utils.speedUpAudio(
-            self._db_temp_audio_path, self.dynamicAssetDir+"audio_voice.wav")
 
     def _timeCaptions(self):
         self.verifyParameters(audioPath=self._db_audio_path)
         whisper_analysis = audio_utils.audioToText(self._db_audio_path)
-        max_len = 15
-        if not self._db_format_vertical:
-            max_len = 30
+        max_len = 30 if not self._db_format_vertical else 15
         self._db_timed_captions = captions.getCaptionsWithTime(
             whisper_analysis, maxCaptionSize=max_len)
 
@@ -107,13 +104,12 @@ class ContentVideoEngine(AbstractContentEngine):
 
     def _prepareCustomAssets(self):
         self.logger("Rendering short: (3/4) preparing custom assets...")
-        pass
 
     def _editAndRenderShort(self):
         self.verifyParameters(
             voiceover_audio_url=self._db_audio_path)
 
-        outputPath = self.dynamicAssetDir+"rendered_video.mp4"
+        outputPath = f"{self.dynamicAssetDir}rendered_video.mp4"
         if not (os.path.exists(outputPath)):
             self.logger("Rendering short: Starting automated editing...")
             videoEditor = EditingEngine()
@@ -149,11 +145,11 @@ class ContentVideoEngine(AbstractContentEngine):
         now = datetime.datetime.now()
         date_str = now.strftime("%Y-%m-%d_%H-%M-%S")
         newFileName = f"videos/{date_str} - " + \
-            re.sub(r"[^a-zA-Z0-9 '\n\.]", '', self._db_yt_title)
+                re.sub(r"[^a-zA-Z0-9 '\n\.]", '', self._db_yt_title)
 
-        shutil.move(self._db_video_path, newFileName+".mp4")
-        with open(newFileName+".txt", "w", encoding="utf-8") as f:
+        shutil.move(self._db_video_path, f"{newFileName}.mp4")
+        with open(f"{newFileName}.txt", "w", encoding="utf-8") as f:
             f.write(
                 f"---Youtube title---\n{self._db_yt_title}\n---Youtube description---\n{self._db_yt_description}")
-        self._db_video_path = newFileName+".mp4"
+        self._db_video_path = f"{newFileName}.mp4"
         self._db_ready_to_upload = True

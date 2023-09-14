@@ -69,6 +69,7 @@ class VideoTranslationUI(AbstractComponentUI):
                 num_steps = content_translation_engine.get_total_steps()
                 def logger(prog_str):
                     progress(self.progress_counter / (num_steps), f"Translating your video ({i+1}/{len(languages)}) - {prog_str}")
+
                 content_translation_engine.set_logger(logger)
 
                 for step_num, step_info in content_translation_engine.makeContent():
@@ -76,12 +77,16 @@ class VideoTranslationUI(AbstractComponentUI):
                     self.progress_counter += 1
 
                 video_path = content_translation_engine.get_video_output_path()
-                current_url = self.shortGptUI.share_url+"/" if self.shortGptUI.share else self.shortGptUI.local_url
+                current_url = (
+                    f"{self.shortGptUI.share_url}/"
+                    if self.shortGptUI.share
+                    else self.shortGptUI.local_url
+                )
                 file_url_path = f"{current_url}file={video_path}"
                 file_name = video_path.split("/")[-1].split("\\")[-1]
                 self.embedHTML += f'''
                 <div style="display: flex; flex-direction: column; align-items: center;">
-                    <video width="{500}"  style="max-height: 100%;" controls>
+                    <video width="500"  style="max-height: 100%;" controls>
                         <source src="{file_url_path}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
@@ -89,17 +94,24 @@ class VideoTranslationUI(AbstractComponentUI):
                         <button style="font-size: 1em; padding: 10px; border: none; cursor: pointer; color: white; background: #007bff;">Download Video</button>
                     </a>
                 </div>'''
-                yield "<div>"+self.embedHTML + '</div>', gr.Button.update(visible=True), gr.update(visible=False)
+                yield (
+                    f"<div>{self.embedHTML}</div>",
+                    gr.Button.update(visible=True),
+                    gr.update(visible=False),
+                )
 
         except Exception as e:
             traceback_str = ''.join(traceback.format_tb(e.__traceback__))
-            error_name = type(e).__name__.capitalize() + " : " + f"{e.args[0]}"
+            error_name = f"{type(e).__name__.capitalize()} : " + f"{e.args[0]}"
             print("Error", traceback_str)
             error_html = GradioComponentsHTML.get_html_error_template().format(error_message=error_name, stack_trace=traceback_str)
-            return self.embedHTML + '</div>', gr.Button.update(visible=True), gr.update(value=error_html, visible=True)
+            return (
+                f'{self.embedHTML}</div>',
+                gr.Button.update(visible=True),
+                gr.update(value=error_html, visible=True),
+            )
 
     def inspect_create_inputs(self, videoType, video_path, yt_link,  tts_engine, language_eleven, language_edge,):
-        supported_extensions = ['.mp4', '.avi', '.mov']  # Add more supported video extensions if needed
         print(videoType, video_path, yt_link)
         if videoType == "Youtube link":
             if not yt_link.startswith("https://youtube.com/") and not yt_link.startswith("https://www.youtube.com/"):
@@ -109,13 +121,16 @@ class VideoTranslationUI(AbstractComponentUI):
                 raise gr.Error('You must drag and drop a valid video file.')
 
             file_ext = os.path.splitext(video_path)[-1].lower()
+            supported_extensions = ['.mp4', '.avi', '.mov']  # Add more supported video extensions if needed
             if file_ext not in supported_extensions:
-                raise gr.Error('Invalid video file. Supported video file extensions are: {}'.format(', '.join(supported_extensions)))
+                raise gr.Error(
+                    f"Invalid video file. Supported video file extensions are: {', '.join(supported_extensions)}"
+                )
         if tts_engine == AssetComponentsUtils.ELEVEN_TTS:
-            if not len(language_eleven) >0:
+            if len(language_eleven) <= 0:
                 raise gr.Error('You must select one or more target languages')
         if tts_engine == AssetComponentsUtils.EDGE_TTS:
-            if not len(language_edge) >0:
+            if len(language_edge) <= 0:
                 raise gr.Error('You must select one or more target languages')
         return gr.update(visible=False)
 

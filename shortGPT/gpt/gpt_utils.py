@@ -16,33 +16,24 @@ def num_tokens_from_messages(texts, model="gpt-3.5-turbo-0301"):
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
         encoding = tiktoken.get_encoding("cl100k_base")
-    if model == "gpt-3.5-turbo-0301":  # note: future models may deviate from this
-        if isinstance(texts, str):
-            texts = [texts]
-        score = 0
-        for text in texts:
-            score += 4 + len(encoding.encode(text))
-        return score
-    else:
+    if model != "gpt-3.5-turbo-0301":
         raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
         See https://github.com/openai/openai-python/blob/main/chatml.md for information""")
+    if isinstance(texts, str):
+        texts = [texts]
+    return sum(4 + len(encoding.encode(text)) for text in texts)
 
 
 def extract_biggest_json(string):
     json_regex = r"\{(?:[^{}]|(?R))*\}"
-    json_objects = re.findall(json_regex, string)
-    if json_objects:
+    if json_objects := re.findall(json_regex, string):
         return max(json_objects, key=len)
     return None
 
 
 def get_first_number(string):
     pattern = r'\b(0|[1-9]|10)\b'
-    match = re.search(pattern, string)
-    if match:
-        return int(match.group())
-    else:
-        return None
+    return int(match.group()) if (match := re.search(pattern, string)) else None
 
 
 def load_yaml_file(file_path: str) -> dict:
@@ -90,15 +81,15 @@ def gpt3Turbo_completion(chat_prompt="", system="You are an AI that can give the
             text = response['choices'][0]['message']['content'].strip()
             if remove_nl:
                 text = re.sub('\s+', ' ', text)
-            filename = '%s_gpt3.txt' % time()
+            filename = f'{time()}_gpt3.txt'
             if not os.path.exists('.logs/gpt_logs'):
                 os.makedirs('.logs/gpt_logs')
-            with open('.logs/gpt_logs/%s' % filename, 'w', encoding='utf-8') as outfile:
+            with open(f'.logs/gpt_logs/{filename}', 'w', encoding='utf-8') as outfile:
                 outfile.write(f"System prompt: ===\n{system}\n===\n"+f"Chat prompt: ===\n{chat_prompt}\n===\n" + f'RESPONSE:\n====\n{text}\n===\n')
             return text
         except Exception as oops:
             retry += 1
             if retry >= max_retry:
-                raise Exception("GPT3 error: %s" % oops)
+                raise Exception(f"GPT3 error: {oops}")
             print('Error communicating with OpenAI:', oops)
             sleep(1)

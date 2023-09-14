@@ -63,7 +63,7 @@ d8'   .8P 88     88  Y8.   .8P   88     88    88    Y8.   .88  88           88
     @staticmethod
     def display_error(error_message, stack_trace):
         '''Display an error message in the console'''
-        print(CLI.bcolors.FAIL + "ERROR : " + error_message + CLI.bcolors.ENDC)
+        print(f"{CLI.bcolors.FAIL}ERROR : {error_message}{CLI.bcolors.ENDC}")
         print(stack_trace)
         print("If the problem persists, don't hesitate to contact our support. We're here to assist you.")
         print("Get Help on Discord : https://discord.gg/qn2WJaRH")

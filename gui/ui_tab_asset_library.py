@@ -137,9 +137,7 @@ class AssetLibrary(AbstractComponentUI):
                 # if the last character is a /, remove it
                 if asset_link_split[-1] == '/':
                     asset_link_split = asset_link_split[:-1]
-                asset_link_split = asset_link_split[-1]
-            else:
-                asset_link_split = asset_link_split[-1]
+            asset_link_split = asset_link_split[-1]
             asset_link = f"https://youtube.com/embed/{asset_link_split}"
             embed_html = f'<iframe width="{embed_width}" height="{embed_height}" src="{asset_link}"></iframe>'
         elif 'public/' in asset_link:
@@ -174,7 +172,7 @@ class AssetLibrary(AbstractComponentUI):
             AssetType.IMAGE.value: image_path
         }
         if not os.path.exists(path_dict[upload_type]):
-            raise gr.Error(f'The file does not exist at the given path.')
+            raise gr.Error('The file does not exist at the given path.')
         return self.__upload_local_asset(upload_type, upload_name, video_path, audio_path, image_path)
 
     def __upload_local_asset(self, upload_type, upload_name, video_path, audio_path, image_path):
@@ -186,12 +184,15 @@ class AssetLibrary(AbstractComponentUI):
             AssetType.BACKGROUND_MUSIC.value: audio_path,
             AssetType.IMAGE.value: image_path
         }
-        new_path = "public/" + self.__clean_filename(upload_name) + "." + path_dict[upload_type].split(".")[-1]
+        new_path = (
+            f"public/{self.__clean_filename(upload_name)}."
+            + path_dict[upload_type].split(".")[-1]
+        )
         shutil.move(path_dict[upload_type], new_path)
         AssetDatabase.add_local_asset(upload_name, AssetType(upload_type), new_path)
         latest_df = AssetDatabase.get_df()
         return gr.DataFrame.update(value=latest_df), gr.HTML.update(value=self.__get_asset_embed(latest_df, 0)),\
-            gr.update(value=f"🗑️ Delete {latest_df.iloc[0]['name']}"),\
-            gr.Accordion.update(open=False),\
-            gr.CheckboxGroup.update(choices=AssetComponentsUtils.getBackgroundVideoChoices(), interactive=True),\
-            gr.CheckboxGroup.update(choices=AssetComponentsUtils.getBackgroundMusicChoices(), interactive=True)
+                gr.update(value=f"🗑️ Delete {latest_df.iloc[0]['name']}"),\
+                gr.Accordion.update(open=False),\
+                gr.CheckboxGroup.update(choices=AssetComponentsUtils.getBackgroundVideoChoices(), interactive=True),\
+                gr.CheckboxGroup.update(choices=AssetComponentsUtils.getBackgroundMusicChoices(), interactive=True)

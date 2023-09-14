@@ -60,14 +60,16 @@ class ContentShortEngine(AbstractContentEngine):
             self._db_translated_script = gpt_translate.translateContent(script, self._db_language)
             script = self._db_translated_script
         self._db_temp_audio_path = self.voiceModule.generate_voice(
-            script, self.dynamicAssetDir + "temp_audio_path.wav")
+            script, f"{self.dynamicAssetDir}temp_audio_path.wav"
+        )
 
     def _speedUpAudio(self):
         if (self._db_audio_path):
             return
         self.verifyParameters(tempAudioPath=self._db_temp_audio_path)
         self._db_audio_path = audio_utils.speedUpAudio(
-            self._db_temp_audio_path, self.dynamicAssetDir+"audio_voice.wav")
+            self._db_temp_audio_path, f"{self.dynamicAssetDir}audio_voice.wav"
+        )
 
     def _timeCaptions(self):
         self.verifyParameters(audioPath=self._db_audio_path)
@@ -107,11 +109,14 @@ class ContentShortEngine(AbstractContentEngine):
         if not self._db_background_trimmed:
             self.logger("Rendering short: (2/4) preparing background video asset...")
             self._db_background_trimmed = extract_random_clip_from_video(
-                self._db_background_video_url, self._db_background_video_duration, self._db_voiceover_duration, self.dynamicAssetDir + "clipped_background.mp4")
+                self._db_background_video_url,
+                self._db_background_video_duration,
+                self._db_voiceover_duration,
+                f"{self.dynamicAssetDir}clipped_background.mp4",
+            )
 
     def _prepareCustomAssets(self):
         self.logger("Rendering short: (3/4) preparing custom assets...")
-        pass
 
     def _editAndRenderShort(self):
         self.verifyParameters(
@@ -119,7 +124,7 @@ class ContentShortEngine(AbstractContentEngine):
             video_duration=self._db_background_video_duration,
             music_url=self._db_background_music_url)
 
-        outputPath = self.dynamicAssetDir+"rendered_video.mp4"
+        outputPath = f"{self.dynamicAssetDir}rendered_video.mp4"
         if not (os.path.exists(outputPath)):
             self.logger("Rendering short: Starting automated editing...")
             videoEditor = EditingEngine()
@@ -159,11 +164,11 @@ class ContentShortEngine(AbstractContentEngine):
         now = datetime.datetime.now()
         date_str = now.strftime("%Y-%m-%d_%H-%M-%S")
         newFileName = f"videos/{date_str} - " + \
-            re.sub(r"[^a-zA-Z0-9 '\n\.]", '', self._db_yt_title)
+                re.sub(r"[^a-zA-Z0-9 '\n\.]", '', self._db_yt_title)
 
-        shutil.move(self._db_video_path, newFileName+".mp4")
-        with open(newFileName+".txt", "w", encoding="utf-8") as f:
+        shutil.move(self._db_video_path, f"{newFileName}.mp4")
+        with open(f"{newFileName}.txt", "w", encoding="utf-8") as f:
             f.write(
                 f"---Youtube title---\n{self._db_yt_title}\n---Youtube description---\n{self._db_yt_description}")
-        self._db_video_path = newFileName+".mp4"
+        self._db_video_path = f"{newFileName}.mp4"
         self._db_ready_to_upload = True

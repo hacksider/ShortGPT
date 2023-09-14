@@ -12,11 +12,9 @@ def search_program(program_name):
         return None
 
 def get_program_path(program_name):
-    program_path = search_program(program_name)
-    return program_path
+    return search_program(program_name)
 
-magick_path = get_program_path("magick")
-if magick_path:
+if magick_path := get_program_path("magick"):
     os.environ['IMAGEMAGICK_BINARY'] = magick_path
 
 import os

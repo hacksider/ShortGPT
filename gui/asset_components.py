@@ -20,20 +20,17 @@ class AssetComponentsUtils:
     @classmethod
     def getBackgroundVideoChoices(cls):
         df = AssetDatabase.get_df()
-        choices = list(df.loc['background video' == df['type']]['name'])[:20]
-        return choices
+        return list(df.loc[df['type'] == 'background video']['name'])[:20]
 
     @classmethod
     def getBackgroundMusicChoices(cls):
         df = AssetDatabase.get_df()
-        choices = list(df.loc['background music' == df['type']]['name'])[:20]
-        return choices
+        return list(df.loc[df['type'] == 'background music']['name'])[:20]
 
     @classmethod
     def getElevenlabsVoices(cls):
         api_key = ApiKeyManager.get_api_key("ELEVEN LABS")
-        voices = list(reversed(ElevenLabsAPI(api_key).get_voices().keys()))
-        return voices
+        return list(reversed(ElevenLabsAPI(api_key).get_voices().keys()))
 
     @classmethod
     def start_file(cls, path):

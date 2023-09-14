@@ -42,7 +42,7 @@ FLOWS_PATH = (_here / 'flows/').resolve()
 
 class EditingEngine:
     def __init__(self,):
-        self.editing_step_tracker = dict((step, 0) for step in EditingStep)
+        self.editing_step_tracker = {step: 0 for step in EditingStep}
         self.schema = {'visual_assets': {}, 'audio_assets': {}}
 
     def addEditingStep(self, editingStep: EditingStep, args: Dict[str, any] = {}):
@@ -55,17 +55,17 @@ class EditingEngine:
                 if required_argument not in args:
                     raise Exception(
                         f"Error. '{required_argument}' input missing, you must include it to use this editing step")
-            if required_args:
-                pass
             action_names = [action['type'] for action in editingStepDict['actions']
                             ] if 'actions' in editingStepDict else []
-            param_names = [param_name for param_name in editingStepDict['parameters']
-                           ] if 'parameters' in editingStepDict else []
+            param_names = (
+                list(editingStepDict['parameters'])
+                if 'parameters' in editingStepDict
+                else []
+            )
             for arg_name in args:
                 if ('inputs' in editingStepDict):
                     if 'parameters' in editingStepDict['inputs'] and arg_name in param_names:
                         editingStepDict['parameters'][arg_name] = args[arg_name]
-                        pass
                     if 'actions' in editingStepDict['inputs'] and arg_name in action_names:
                         for i, action in enumerate(editingStepDict['actions']):
                             if action['type'] == arg_name:

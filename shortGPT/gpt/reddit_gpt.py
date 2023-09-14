@@ -19,8 +19,7 @@ def getInterestingRedditQuestion():
 def createRedditScript(question):
     chat, system = gpt_utils.load_local_yaml_prompt('prompt_templates/reddit_generate_script.yaml')
     chat = chat.replace("<<QUESTION>>", question)
-    result = "Reddit, " + question +" "+gpt_utils.gpt3Turbo_completion(chat_prompt=chat, system=system, temp=1.08)
-    return result
+    return f"Reddit, {question} {gpt_utils.gpt3Turbo_completion(chat_prompt=chat, system=system, temp=1.08)}"
     
 
 def getRealisticness(text):

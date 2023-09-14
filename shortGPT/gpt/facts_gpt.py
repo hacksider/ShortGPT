@@ -3,8 +3,9 @@ import json
 def generateFacts(facts_type):
     chat, system = gpt_utils.load_local_yaml_prompt('prompt_templates/facts_generator.yaml')
     chat = chat.replace("<<FACTS_TYPE>>", facts_type)
-    result = gpt_utils.gpt3Turbo_completion(chat_prompt=chat, system=system, temp=1.3)
-    return result
+    return gpt_utils.gpt3Turbo_completion(
+        chat_prompt=chat, system=system, temp=1.3
+    )
 
 def generateFactSubjects(n):
     out = []
@@ -18,6 +19,4 @@ def generateFactSubjects(n):
             out = json.loads(result.replace("'", '"'))
         except Exception as e:
             print(f"INFO - Failed generating {n} fact subjects after {count} trials", e)
-            pass
-        
     return out

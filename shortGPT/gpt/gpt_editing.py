@@ -13,7 +13,7 @@ def getImageQueryPairs(captions,n=15 ,maxTime=2):
             query = a[a.find("'")+1:a.rfind("'")]
             time = float(a.split(":")[0].replace(' ',''))
             if (time > t0 and time< end_audio):
-                pairs.append((time, query+" image"))
+                pairs.append((time, f"{query} image"))
                 t0 = time
         except:
             print('problem extracting image queries from ', a)

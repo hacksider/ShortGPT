@@ -6,5 +6,4 @@ def translateContent(content, language):
         language =="arabic, and make the translated text two third of the length of the original."
     system = system.replace("<<LANGUAGE>>", language)
     chat = chat.replace("<<CONTENT>>", content)
-    result = gpt_utils.gpt3Turbo_completion(chat_prompt=chat, system=system, temp=1)
-    return result
+    return gpt_utils.gpt3Turbo_completion(chat_prompt=chat, system=system, temp=1)

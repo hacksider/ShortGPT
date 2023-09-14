@@ -21,9 +21,8 @@ class ElevenLabsVoiceModule(VoiceModule):
         return self.remaining_credits if self.remaining_credits else self.eleven_labs_api.get_remaining_characters()
 
     def generate_voice(self, text, outputfile):
-        if self.get_remaining_characters() >= len(text):
-            file_path =self.eleven_labs_api.generate_voice(text=text, character=self.voiceName, filename=outputfile)
-            self.update_usage()
-            return file_path
-        else:
+        if self.get_remaining_characters() < len(text):
             raise Exception(f"You cannot generate {len(text)} characters as your ElevenLabs key has only {self.remaining_credits} characters remaining")
+        file_path =self.eleven_labs_api.generate_voice(text=text, character=self.voiceName, filename=outputfile)
+        self.update_usage()
+        return file_path

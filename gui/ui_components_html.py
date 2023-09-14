@@ -42,7 +42,7 @@ class GradioComponentsHTML:
         Returns:
         str: The generated HTML code snippet.
         """
-        html = f'''
+        return f'''
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <video width="{width}" height="{height}" style="max-height: 100%;" controls>
                     <source src="{file_url_path}" type="video/mp4">
@@ -53,4 +53,3 @@ class GradioComponentsHTML:
                 </a>
             </div>
         '''
-        return html

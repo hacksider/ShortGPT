@@ -15,12 +15,7 @@ def search_videos(query_string, orientation_landscape=True):
     }
 
     response = requests.get(url, headers=headers, params=params)
-    json_data = response.json()
-    # print(response.headers['X-Ratelimit-Limit'])
-    # print(response.headers['X-Ratelimit-Remaining'])
-    # print(response.headers['X-Ratelimit-Reset'])
-
-    return json_data
+    return response.json()
 
 
 def getBestVideo(query_string, orientation_landscape=True, used_vids=[]):
@@ -41,11 +36,10 @@ def getBestVideo(query_string, orientation_landscape=True, used_vids=[]):
         for video_file in video['video_files']:
             if orientation_landscape:
                 if video_file['width'] == 1920 and video_file['height'] == 1080:
-                    if not (video_file['link'].split('.hd')[0] in used_vids):
+                    if video_file['link'].split('.hd')[0] not in used_vids:
                         return video_file['link']
-            else:
-                if video_file['width'] == 1080 and video_file['height'] == 1920:
-                    if not (video_file['link'].split('.hd')[0] in used_vids):
-                        return video_file['link']
+            elif video_file['width'] == 1080 and video_file['height'] == 1920:
+                if video_file['link'].split('.hd')[0] not in used_vids:
+                    return video_file['link']
     print("NO LINKS found for this round of search with query :", query_string)
     return None

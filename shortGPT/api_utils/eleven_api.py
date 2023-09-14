@@ -12,7 +12,7 @@ class ElevenLabsAPI:
 
     def get_voices(self):
         '''Get the list of voices available'''
-        url = self.url_base + 'voices'
+        url = f'{self.url_base}voices'
         headers = {'accept': 'application/json'}
         if self.api_key:
             headers['xi-api-key'] = self.api_key
@@ -22,15 +22,14 @@ class ElevenLabsAPI:
 
     def get_remaining_characters(self):
         '''Get the number of characters remaining'''
-        url = self.url_base + 'user'
+        url = f'{self.url_base}user'
         headers = {'accept': '*/*', 'xi-api-key': self.api_key, 'Content-Type': 'application/json'}
         response = requests.get(url, headers=headers)
 
-        if response.status_code == 200:
-            sub = response.json()['subscription']
-            return sub['character_limit'] - sub['character_count']
-        else:
+        if response.status_code != 200:
             raise Exception(response.json()['detail']['message'])
+        sub = response.json()['subscription']
+        return sub['character_limit'] - sub['character_count']
 
     def generate_voice(self, text, character, filename, stability=0.2, clarity=0.1):
         '''Generate a voice'''

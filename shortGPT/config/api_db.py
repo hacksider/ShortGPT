@@ -16,19 +16,13 @@ class ApiKeyManager:
     def get_api_key(cls, key: str or ApiProvider):
         if isinstance(key, ApiProvider):
             key = key.value
-            
-        # Check if the key is present in the database
-        api_key = cls.api_key_doc_manager._get(key)
-        if api_key:
+
+        if api_key := cls.api_key_doc_manager._get(key):
             return api_key
 
         # If not found in the database, check in the environment variables
         env_key = key.replace(" ", "_").upper()
-        api_key = os.environ.get(env_key)
-        if api_key:
-            return api_key
-        
-        return ""
+        return api_key if (api_key := os.environ.get(env_key)) else ""
 
     @classmethod
     def set_api_key(cls, key: str or ApiProvider, value: str):

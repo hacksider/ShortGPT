@@ -130,11 +130,15 @@ class VideoAutomationUI(AbstractComponentUI):
                     try:
                         video_path = self.make_video(self.script, self.voice_module, self.isVertical, progress=progress)
                         file_name = video_path.split("/")[-1].split("\\")[-1]
-                        current_url = self.shortGptUI.share_url+"/" if self.shortGptUI.share else self.shortGptUI.local_url
+                        current_url = (
+                            f"{self.shortGptUI.share_url}/"
+                            if self.shortGptUI.share
+                            else self.shortGptUI.local_url
+                        )
                         file_url_path = f"{current_url}file={video_path}"
                         self.video_html = f'''
                             <div style="display: flex; flex-direction: column; align-items: center;">
-                                <video width="{600}" height="{300}" style="max-height: 100%;" controls>
+                                <video width="600" height="300" style="max-height: 100%;" controls>
                                     <source src="{file_url_path}" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
@@ -147,7 +151,7 @@ class VideoAutomationUI(AbstractComponentUI):
                         bot_message = "Your video is completed !🎬. Scroll down below to open its file location."
                     except Exception as e:
                         traceback_str = ''.join(traceback.format_tb(e.__traceback__))
-                        error_name = type(e).__name__.capitalize() + " : " + f"{e.args[0]}"
+                        error_name = f"{type(e).__name__.capitalize()} : " + f"{e.args[0]}"
                         errorVisible = True
                         gradio_content_automation_ui_error_template = GradioComponentsHTML.get_html_error_template()
                         error_html = gradio_content_automation_ui_error_template.format(error_message=error_name, stack_trace=traceback_str)

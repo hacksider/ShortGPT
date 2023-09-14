@@ -42,7 +42,7 @@ class ContentTranslationEngine(AbstractContentEngine):
     def _transcribe_audio(self):
         video_audio, _ = get_asset_duration(self._db_src_url, isVideo=False)
         self.verifyParameters(content_path=video_audio)
-        self.logger(f"1/5 - Transcribing original audio to text...")
+        self.logger("1/5 - Transcribing original audio to text...")
         whispered = audioToText(video_audio, model_size='base')
         self._db_speech_blocks = getSpeechBlocks(whispered, silence_time=0.8)
         if (ACRONYM_LANGUAGE_MAPPING.get(whispered['language']) == Language(self._db_target_language)):
@@ -72,17 +72,24 @@ class ContentTranslationEngine(AbstractContentEngine):
         translated_audio_blocks = []
         for i, ((t1, t2), translated_text) in tqdm(enumerate(self._db_translated_timed_sentences), desc="Generating translated audio"):
             self.logger(f"3/5 - Generating translated audio - {i+1} / {len(self._db_translated_timed_sentences)}")
-            translated_voice = self.voiceModule.generate_voice(translated_text, self.dynamicAssetDir+f"translated_{i}_{self._db_target_language}.wav")
+            translated_voice = self.voiceModule.generate_voice(
+                translated_text,
+                f"{self.dynamicAssetDir}translated_{i}_{self._db_target_language}.wav",
+            )
             if not translated_voice:
                 raise Exception('An error happending during audio voice creation')
-            final_audio_path = speedUpAudio(translated_voice, self.dynamicAssetDir+f"translated_{i}_{self._db_target_language}_spedup.wav", expected_duration=t2-t1 - 0.05)
+            final_audio_path = speedUpAudio(
+                translated_voice,
+                f"{self.dynamicAssetDir}translated_{i}_{self._db_target_language}_spedup.wav",
+                expected_duration=t2 - t1 - 0.05,
+            )
             _, translated_duration = get_asset_duration(final_audio_path, isVideo=False)
             translated_audio_blocks.append([[t1, t1+translated_duration], final_audio_path])
         self._db_audio_bits = translated_audio_blocks
 
     def _edit_and_render_video(self):
         self.verifyParameters(_db_audio_bits=self._db_audio_bits)
-        self.logger(f"4.1 / 5 - Preparing automated editing")
+        self.logger("4.1 / 5 - Preparing automated editing")
         target_language =  Language(self._db_target_language)
         input_video, video_length = get_asset_duration(self._db_src_url)
         video_audio, _ = get_asset_duration(self._db_src_url, isVideo=False)
@@ -104,27 +111,30 @@ class ContentTranslationEngine(AbstractContentEngine):
             if not self._db_timed_translated_captions:
                 if not self._db_translated_voiceover_path:
                     self.logger(f"4.5 / 5 - Generating captions in {target_language.value}")
-                    editing_engine.generateAudio(self.dynamicAssetDir+"translated_voiceover.wav")
-                    self._db_translated_voiceover_path = self.dynamicAssetDir+"translated_voiceover.wav"
+                    editing_engine.generateAudio(f"{self.dynamicAssetDir}translated_voiceover.wav")
+                    self._db_translated_voiceover_path = (
+                        f"{self.dynamicAssetDir}translated_voiceover.wav"
+                    )
                 whispered_translated = audioToText(self._db_translated_voiceover_path, model_size='base')
                 timed_translated_captions = getCaptionsWithTime(whispered_translated, maxCaptionSize=50 if is_landscape else 15, considerPunctuation=True)
                 self._db_timed_translated_captions = [[[t1,t2], text] for (t1, t2), text in timed_translated_captions if t2 - t1 <= 4]
             for (t1, t2), text in self._db_timed_translated_captions:
-                caption_key = "LANDSCAPE" if is_landscape else "SHORT"
-                caption_key += "_ARABIC" if target_language == Language.ARABIC else ""
+                caption_key = ("LANDSCAPE" if is_landscape else "SHORT") + (
+                    "_ARABIC" if target_language == Language.ARABIC else ""
+                )
                 caption_type = getattr(EditingStep, f"ADD_CAPTION_{caption_key}")
                 editing_engine.addEditingStep(caption_type, {'text': text, "set_time_start": t1, "set_time_end": t2})
-    
-        self._db_video_path = self.dynamicAssetDir+"translated_content.mp4"
+
+        self._db_video_path = f"{self.dynamicAssetDir}translated_content.mp4"
 
         editing_engine.renderVideo(self._db_video_path, logger= self.logger if self.logger is not self.default_logger else None)
     def _add_metadata(self):
-        self.logger(f"5 / 5 - Saving translated video")
+        self.logger("5 / 5 - Saving translated video")
         now = datetime.datetime.now()
         date_str = now.strftime("%Y-%m-%d_%H-%M-%S")
         newFileName = f"videos/{date_str} - " + \
-            re.sub(r"[^a-zA-Z0-9 '\n\.]", '', f"translated_content_to_{self._db_target_language}")
+                re.sub(r"[^a-zA-Z0-9 '\n\.]", '', f"translated_content_to_{self._db_target_language}")
 
-        shutil.move(self._db_video_path, newFileName+".mp4")
-        self._db_video_path = newFileName+".mp4"
+        shutil.move(self._db_video_path, f"{newFileName}.mp4")
+        self._db_video_path = f"{newFileName}.mp4"
         self._db_ready_to_upload = True

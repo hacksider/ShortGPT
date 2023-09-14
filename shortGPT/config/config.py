@@ -24,7 +24,7 @@ def write_yaml_config(file_path: str, data: dict):
 def load_editing_assets() -> dict:
     """Loads all local assets from the static-assets folder specified in the yaml_config"""
     yaml_config = read_yaml_config("public.yaml")
-    if yaml_config['local-assets'] == None:
+    if yaml_config['local-assets'] is None:
         yaml_config['local-assets'] = {}
     # Create a copy of the dictionary before iterating over it
     local_paths = []
@@ -46,7 +46,7 @@ def load_editing_assets() -> dict:
     for foldername, subfolders, filenames in os.walk(folder_path):
         for filename in filenames:
             file_path = os.path.join(foldername, filename).replace("\\", "/")
-            if not file_path in local_paths:
+            if file_path not in local_paths:
                 yaml_config['local-assets'][filename] = file_path
 
     write_yaml_config("public.yaml", yaml_config)
